@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Adult Gate Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #172033;
+        background: #f4f7fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+      }
+
+      main {
+        width: min(920px, 100%);
+        display: grid;
+        gap: 18px;
+      }
+
+      .panel {
+        background: #fff;
+        border: 1px solid #dce3ec;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 14px 42px rgba(26, 40, 63, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 30px;
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+        color: #516071;
+        line-height: 1.5;
+      }
+
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        border-radius: 999px;
+        padding: 0 14px;
+        font-weight: 700;
+        background: #e8f0fb;
+        color: #173a66;
+      }
+
+      .status[data-mode="off"] {
+        background: #e8f7ee;
+        color: #146337;
+      }
+
+      button {
+        min-height: 42px;
+        border: 0;
+        border-radius: 6px;
+        padding: 0 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        background: #172033;
+        color: #fff;
+      }
+
+      button.secondary {
+        background: #e7edf4;
+        color: #172033;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        font-weight: 700;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #b8c4d2;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font: inherit;
+        background: #fff;
+        color: #172033;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .hint {
+        display: block;
+        color: #6a7787;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.35;
+      }
+
+      .log {
+        min-height: 72px;
+        max-height: 220px;
+        overflow: auto;
+        padding: 14px;
+        border-radius: 8px;
+        background: #101827;
+        color: #dce6f2;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.45;
+        display: grid;
+        align-content: start;
+        gap: 6px;
+      }
+
+      .log-line {
+        white-space: pre-wrap;
+      }
+
+      details.panel {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 64px;
+        padding: 0 24px;
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      summary::after {
+        content: "+";
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: #e7edf4;
+        color: #172033;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      details[open] summary::after {
+        content: "-";
+      }
+
+      .challenge-list {
+        display: grid;
+        gap: 10px;
+        max-height: 520px;
+        overflow: auto;
+        padding: 0 24px 24px;
+      }
+
+      .challenge-item {
+        display: grid;
+        gap: 7px;
+        border-top: 1px solid #e3e9f1;
+        padding-top: 12px;
+      }
+
+      .challenge-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .challenge-number {
+        font-weight: 800;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 3px 9px;
+        background: #e8f0fb;
+        color: #173a66;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .answer {
+        color: #516071;
+        font-size: 14px;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 16px;
+          place-items: start center;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .status-row {
+          align-items: stretch;
+        }
+
+        button,
+        .status {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="panel">
+        <h1>Тест отключения детского режима</h1>
+        <p>Кнопка запускает библиотеку adult-gate. При успешном ответе статус меняется, при ошибке режим остается включенным.</p>
+
+        <div class="status-row">
+          <span id="modeStatus" class="status" data-mode="on">Детский режим включен</span>
+          <button id="disableKidsMode" type="button">Отключить детский режим</button>
+          <button id="resetMode" type="button" class="secondary">Сбросить</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="controls">
+          <label>
+            Лимит времени, секунд
+            <input id="timeLimitSeconds" type="text" inputmode="numeric" pattern="[0-9]*" value="15">
+            <span class="hint">0 отключает таймер и дает бесконечное время.</span>
+          </label>
+
+          <label>
+            Попыток до блокировки
+            <input id="maxAttempts" type="text" inputmode="numeric" pattern="[0-9]*" value="3">
+            <span class="hint">Изменение пересоздает gate и сбрасывает счетчик попыток.</span>
+          </label>
+        </div>
+      </section>
+
+      <details class="panel">
+        <summary><span id="challengeSummaryCount">0</span> вариантов задач</summary>
+        <div id="challengeList" class="challenge-list"></div>
+      </details>
+
+      <section class="panel">
+        <div class="log" id="eventLog">
+          <div class="log-line">Готово к проверке.</div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { ADULT_GATE_CHALLENGES, createAdultGate } from "./src/adult-gate.js";
+
+      const status = document.querySelector("#modeStatus");
+      const log = document.querySelector("#eventLog");
+      const timeLimitInput = document.querySelector("#timeLimitSeconds");
+      const maxAttemptsInput = document.querySelector("#maxAttempts");
+      const challengeList = document.querySelector("#challengeList");
+      const challengeSummaryCount = document.querySelector("#challengeSummaryCount");
+      const disableButton = document.querySelector("#disableKidsMode");
+      const resetButton = document.querySelector("#resetMode");
+
+      challengeSummaryCount.textContent = String(ADULT_GATE_CHALLENGES.length);
+      renderChallengeList();
+
+      let gate = createConfiguredGate();
+
+      disableButton.addEventListener("click", () => {
+        gate.open();
+      });
+
+      resetButton.addEventListener("click", () => {
+        setKidsMode(true);
+        writeLog("Состояние сброшено. Детский режим снова включен.");
+      });
+
+      [timeLimitInput, maxAttemptsInput].forEach((input) => {
+        input.addEventListener("input", () => {
+          gate.close();
+          gate = createConfiguredGate();
+          writeLog("Настройки gate обновлены, счетчик попыток сброшен.");
+        });
+      });
+
+      function createConfiguredGate() {
+        return createAdultGate({
+          timeLimitMs: readTimeLimitMs(),
+          maxAttempts: readMaxAttempts(),
+          onPass(challenge) {
+            setKidsMode(false);
+            writeLog(`Успех: задача ${challenge.id}. Детский режим отключен.`);
+          },
+          onFail(challenge, result) {
+            writeLog(`Отказ: задача ${challenge.id}, причина ${result.reason}. Детский режим остается включенным.`);
+          },
+          onLockout() {
+            writeLog("Блокировка: превышен лимит попыток.");
+          }
+        });
+      }
+
+      function readTimeLimitMs() {
+        const seconds = Math.max(0, Number(timeLimitInput.value) || 0);
+        timeLimitInput.value = String(seconds);
+        return seconds * 1000;
+      }
+
+      function readMaxAttempts() {
+        const attempts = Math.max(1, Math.floor(Number(maxAttemptsInput.value) || 1));
+        maxAttemptsInput.value = String(attempts);
+        return attempts;
+      }
+
+      function setKidsMode(enabled) {
+        localStorage.setItem("kidsMode", enabled ? "on" : "off");
+        status.dataset.mode = enabled ? "on" : "off";
+        status.textContent = enabled ? "Детский режим включен" : "Детский режим отключен";
+      }
+
+      function writeLog(message) {
+        const line = document.createElement("div");
+        line.className = "log-line";
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        log.append(line);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function renderChallengeList() {
+        challengeList.innerHTML = "";
+        ADULT_GATE_CHALLENGES.forEach((challenge, index) => {
+          const item = document.createElement("article");
+          item.className = "challenge-item";
+
+          const head = document.createElement("div");
+          head.className = "challenge-head";
+
+          const number = document.createElement("span");
+          number.className = "challenge-number";
+          number.textContent = `${index + 1}.`;
+
+          const category = document.createElement("span");
+          category.className = "badge";
+          category.textContent = challenge.category;
+
+          const type = document.createElement("span");
+          type.className = "badge";
+          type.textContent = challenge.type;
+
+          const prompt = document.createElement("p");
+          prompt.textContent = challenge.prompt;
+
+          const answer = document.createElement("p");
+          answer.className = "answer";
+          answer.textContent = describeChallenge(challenge);
+
+          head.append(number, category, type);
+          item.append(head, prompt, answer);
+          challengeList.append(item);
+        });
+      }
+
+      function describeChallenge(challenge) {
+        if (challenge.type === "choice") {
+          return `Варианты: ${challenge.options.join(", ")}. Ответ: ${challenge.answer}.`;
+        }
+
+        if (challenge.type === "text") {
+          return `Ответ: ${challenge.answers.join(" / ")}.`;
+        }
+
+        if (challenge.type === "hold") {
+          return `Действие: удержание ${challenge.durationMs / 1000} сек.`;
+        }
+
+        if (challenge.type === "sequence") {
+          return `Действие: последовательность ${challenge.sequence.join(" → ")}.`;
+        }
+
+        return "Пользовательское действие.";
+      }
+
+      setKidsMode(localStorage.getItem("kidsMode") !== "off");
+    </script>
+  </body>
+</html>
