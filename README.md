@@ -6,7 +6,7 @@
 
 ## Демо
 
-[Открыть тестовую страницу](https://cdn.jsdelivr.net/gh/kukutz/adult-gate@main/test-page.html)
+[Открыть тестовую страницу](https://raw.githack.com/kukutz/adult-gate/main/test-page.html)
 
 ## Подключение
 
